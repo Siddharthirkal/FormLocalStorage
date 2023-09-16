@@ -34,10 +34,22 @@
                 })
                 .catch((err) => {
                     console.log(err)
-                })
+                })  
             // localStorage.setItem(obj.email, JSON.stringify(obj));
             // showUserOnScreen(obj)
             }
+            function deleteUser(id) {
+        axios.delete(`https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData/${id}`)
+          .then(() => {
+            // Remove the user detail from the website
+            const userElement = document.getElementById(id);
+            userElement.parentNode.removeChild(userElement);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+
             window.addEventListener("DOMContentLoaded", () =>{
                 axios.get("https://crudcrud.com/api/4a1e08848cd245ebb02ff2ec8e906078/AppointmentData")
                     .then((response) => {
@@ -50,14 +62,16 @@
                         console.log(error)
                     })
             })
-            function showUserOnScreen(obj){
-               document.getElementById('email').value = '';
-              document.getElementById('username').value = '';
-              document.getElementById('phonenumber').value = '';
-                const parentElem = document.getElementById('ListOfitems');
-                const childElem = document.getElementById('li');
-                childElem.textContent = obj.name + " - " + obj.email + " - " + obj.phonenumber;
-                parentElem.appendChild(childElem);
+            function showUserOnScreen(obj) {
+        const parentElem = document.getElementById('listOfitems');
+        const li = document.createElement("li");
+        li.id = obj._id; // Set the ID of the li element to the user's ID
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.onclick = () => deleteUser(obj._id); // Call deleteUser when the button is clicked
+        li.textContent = obj.name + " - " + obj.email + " - " + obj.phonenumber;
+        li.appendChild(deleteButton); // Add the delete button to the li element
+        parentElem.appendChild(li);
             }
         </script>
     </body>

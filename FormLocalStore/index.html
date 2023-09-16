@@ -1,44 +1,65 @@
 <html>
-    <body>
-        <form onsubmit="saveToLocalStorage(event)">
-            <label>Name</label>
-            <input type="text" name="username" required/>
-            <label>EmailId</label>
-            <input type="email" name="emailId">
-            <label>Phone Number</label>
-            <input type="tel" name="phonenumber" />
-            <button>Submit</button>
-        </form>
-        <ul id="listOfitems"></ul>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-        <script>
-            function saveToLocalStorage(event){
-                event.preventDefault();
-                const name = event.target.username.value;
-                const email = event.target.emailId.value;
-                const phonenumber = event.target.phonenumber.value;
-                // localStorage.setItem('name', name);
-                // localStorage.setItem('email', email);
-                // localStorage.setItem('phonenumber', phonenumber);
+  <body>
+    <form id="userForm" onsubmit="saveToLocalStorage(event)">
+      <label>Name</label>
+      <input type="text" name="username" required />
+      <label>EmailId</label>
+      <input type="email" name="emailId">
+      <label>Phone Number</label>
+      <input type="tel" name="phonenumber" />
+      <button id="submitButton" type="submit">Submit</button>
+    </form>
+    <ul id="listOfitems"></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script>
+      let editingUserId = null; // Track the ID of the user being edited
 
-            // Create a new user object
-            const obj ={
-                name,
-                email,
-                phonenumber
-            }
-            axios.post("https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData", obj)
-                .then((response) => {
-                    showUserOnScreen(response.data)
-                    console.log(response)
-                })
-                .catch((err) => {
-                    console.log(err)
-                })  
-            // localStorage.setItem(obj.email, JSON.stringify(obj));
-            // showUserOnScreen(obj)
-            }
-            function deleteUser(id) {
+      function saveToLocalStorage(event) {
+        event.preventDefault();
+        const name = event.target.username.value;
+        const email = event.target.emailId.value;
+        const phonenumber = event.target.phonenumber.value;
+
+        if (editingUserId) {
+          // If editingUserId is set, update the existing user
+          const obj = {
+            name,
+            email,
+            phonenumber
+          };
+
+          axios.put(`https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData/${editingUserId}`, obj)
+            .then(() => {
+              // Update the user details on the website
+              const editedUserElement = document.getElementById(editingUserId);
+              editedUserElement.textContent = obj.name + " - " + obj.email + " - " + obj.phonenumber;
+              // Clear the form and reset editingUserId
+              clearForm();
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        } else {
+          // If editingUserId is not set, create a new user
+          const obj = {
+            name,
+            email,
+            phonenumber
+          };
+
+          axios.post("https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData", obj)
+            .then((response) => {
+              showUserOnScreen(response.data);
+              console.log(response);
+              clearForm();
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        }
+      }
+
+      function deleteUser(id) {
         axios.delete(`https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData/${id}`)
           .then(() => {
             // Remove the user detail from the website
@@ -50,29 +71,58 @@
           });
       }
 
-            window.addEventListener("DOMContentLoaded", () =>{
-                axios.get("https://crudcrud.com/api/4a1e08848cd245ebb02ff2ec8e906078/AppointmentData")
-                    .then((response) => {
-                        console.log(response)
-                        for(var i=0;i<response.data.length;i++){
-                            showUserOnScreen(response.data[i])
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error)
-                    })
-            })
-            function showUserOnScreen(obj) {
+      function editUser(id) {
+        // Fetch the user details by ID and populate the form for editing
+        axios.get(`https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData/${id}`)
+          .then((response) => {
+            const user = response.data;
+            document.getElementById('username').value = user.name;
+            document.getElementById('emailId').value = user.email;
+            document.getElementById('phonenumber').value = user.phonenumber;
+            document.getElementById('submitButton').textContent = "Update";
+            editingUserId = id;
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+
+      function clearForm() {
+        // Clear the form fields and reset editingUserId
+        document.getElementById('username').value = '';
+        document.getElementById('emailId').value = '';
+        document.getElementById('phonenumber').value = '';
+        document.getElementById('submitButton').textContent = "Submit";
+        editingUserId = null;
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        axios.get("https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData")
+          .then((response) => {
+            for (var i = 0; i < response.data.length; i++) {
+              showUserOnScreen(response.data[i]);
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+
+      function showUserOnScreen(obj) {
         const parentElem = document.getElementById('listOfitems');
         const li = document.createElement("li");
         li.id = obj._id; // Set the ID of the li element to the user's ID
         const deleteButton = document.createElement("button");
+        const editButton = document.createElement("button");
         deleteButton.textContent = "Delete";
         deleteButton.onclick = () => deleteUser(obj._id); // Call deleteUser when the button is clicked
+        editButton.textContent = "Edit";
+        editButton.onclick = () => editUser(obj._id); // Call editUser when the button is clicked
         li.textContent = obj.name + " - " + obj.email + " - " + obj.phonenumber;
         li.appendChild(deleteButton); // Add the delete button to the li element
+        li.appendChild(editButton); // Add the edit button to the li element
         parentElem.appendChild(li);
-            }
-        </script>
-    </body>
+      }
+    </script>
+  </body>
 </html>

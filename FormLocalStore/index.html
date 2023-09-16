@@ -10,14 +10,16 @@
             <button>Submit</button>
         </form>
         <ul id="listOfitems"></ul>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
         <script>
             function saveToLocalStorage(event){
                 event.preventDefault();
                 const name = event.target.username.value;
                 const email = event.target.emailId.value;
                 const phonenumber = event.target.phonenumber.value;
-
-                const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
+                // localStorage.setItem('name', name);
+                // localStorage.setItem('email', email);
+                // localStorage.setItem('phonenumber', phonenumber);
 
             // Create a new user object
             const obj ={
@@ -25,41 +27,24 @@
                 email,
                 phonenumber
             }
-            localStorage.setItem(obj.email, JSON.stringify(obj));
-            showUserOnScreen(obj);
+            axios.post("https://crudcrud.com/api/74ce7267a916435ca0c21f172108b360/AppointmentData", obj)
+                .then((response) => {
+                    showUserOnScreen(response.data)
+                    console.log(response)
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+            // localStorage.setItem(obj.email, JSON.stringify(obj));
+            // showUserOnScreen(obj)
             }
-            function showUserOnScreen(obj){
-                const parentElem = document.getElementById('listOfitems');
-                const childElem = document.createElement('li');
-                childElem.textContent = obj.name + ' - ' + obj.email + ' - ' + obj.phonenumber
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', function(){
-                    parentElem.removeChild(childElem);
-                    deleteUserFromLocalStorage();
-                });
-                const editbutton = document.createElement('input');
-                    editButton.type = "button";
-                    editButton.value = 'Edit';
-                    editButton.onclick = () => {
-                        localStorage.removeItem(obj.email);
-                        parentElem.removeChild(childElem);
-                        document.getElementById('usernameInputTag').value = obj.name;
-                        document.getElementById('emailInputTag').value = obj.email;
-                        document.getElementById('phoneNumberInputTag').value = obj.phonenumber;
-                    }
-                    
-                childElem.appendChild(deleteButton);
-                childElem.appendChild(editbutton);    
+            function showUserOnScreen(obj)
+            {
+                const parentElem = document.getElementById('ListOfitems');
+                const childElem = document.getElementById('li');
+                childElem.textContent = obj.name + " - " + obj.email + " - " + obj.phonenumber;
                 parentElem.appendChild(childElem);
-                
             }
-
-            function deleteUserFromLocalStorage() {
-                localStorage.removeItem('users');
-                localStorage.clear();
-}
         </script>
     </body>
 </html>
